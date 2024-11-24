@@ -2,49 +2,47 @@ package com.example.SistemaVeterinario.Controllers;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
 import com.example.SistemaVeterinario.Models.VeterinarioModel;
 import com.example.SistemaVeterinario.Repositorys.VeterinarioRepository;
 
-import java.util.List;
 
-@RestController
+@Controller
 @RequestMapping("/veterinarios")
 public class VeterinarioController {
-
     @Autowired
     private VeterinarioRepository veterinarioRepository;
 
     @GetMapping
-    public List<VeterinarioModel> listarTodos() {
-        return veterinarioRepository.findAll();
+    public String listarVeterinarios(Model model) {
+        model.addAttribute("veterinarios", veterinarioRepository.findAll());
+        return "veterinarios/lista";
     }
 
-    @PostMapping
-    public ResponseEntity<VeterinarioModel> cadastrar(@RequestBody VeterinarioModel veterinario) {
-        VeterinarioModel novoVeterinario = veterinarioRepository.save(veterinario);
-        return ResponseEntity.ok(novoVeterinario);
+    @GetMapping("/novo")
+    public String mostrarFormulario(Model model) {
+        model.addAttribute("veterinario", new VeterinarioModel());
+        return "veterinarios/formulario";
     }
 
-    @PutMapping("/{id}")
-    public ResponseEntity<VeterinarioModel> editar(@PathVariable Long id, @RequestBody VeterinarioModel veterinarioAtualizado) {
-        return veterinarioRepository.findById(id)
-                .map(veterinario -> {
-                    veterinario.setNome(veterinarioAtualizado.getNome());
-                    veterinario.setCpf(veterinarioAtualizado.getCpf());
-                    veterinario.setTelefone(veterinarioAtualizado.getTelefone());
-                    VeterinarioModel veterinarioSalvo = veterinarioRepository.save(veterinario);
-                    return ResponseEntity.ok(veterinarioSalvo);
-                }).orElse(ResponseEntity.notFound().build());
+    @PostMapping("/salvar")
+    public String salvar(@ModelAttribute VeterinarioModel veterinario) {
+        veterinarioRepository.save(veterinario);
+        return "redirect:/veterinarios";
     }
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deletar(@PathVariable Long id) {
-        if (veterinarioRepository.existsById(id)) {
-            veterinarioRepository.deleteById(id);
-            return ResponseEntity.noContent().build();
-        }
-        return ResponseEntity.notFound().build();
+    @GetMapping("/editar/{id}")
+    public String editar(@PathVariable Long id, Model model) {
+        model.addAttribute("veterinario", veterinarioRepository.findById(id).orElseThrow());
+        return "veterinarios/formulario";
+    }
+
+    @GetMapping("/deletar/{id}")
+    public String deletar(@PathVariable Long id) {
+        veterinarioRepository.deleteById(id);
+        return "redirect:/veterinarios";
     }
 }

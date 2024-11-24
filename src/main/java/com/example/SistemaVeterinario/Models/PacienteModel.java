@@ -29,5 +29,9 @@ public class PacienteModel {
     @Column(nullable = false)
     private String raca;
 
+    @ManyToOne
+    @JoinColumn(name = "dono_id", nullable = false)
+    private DonoModel dono;
+
    
 }

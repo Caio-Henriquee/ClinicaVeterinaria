@@ -1,55 +1,53 @@
 package com.example.SistemaVeterinario.Controllers;
 
 import com.example.SistemaVeterinario.Models.PacienteModel;
+import com.example.SistemaVeterinario.Repositorys.DonoRepository;
 import com.example.SistemaVeterinario.Repositorys.PacienteRepository;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 
-@RestController
+@Controller
 @RequestMapping("/pacientes")
 public class PacienteController {
-
     @Autowired
     private PacienteRepository pacienteRepository;
     
+    @Autowired
+    private DonoRepository donoRepository;
 
     @GetMapping
-    public List<PacienteModel> listarTodos() {
-        return pacienteRepository.findAll();
+    public String listarPacientes(Model model) {
+        model.addAttribute("pacientes", pacienteRepository.findAll());
+        return "pacientes/lista";
     }
 
-    @PostMapping
-    public ResponseEntity<PacienteModel> cadastrar(@RequestBody PacienteModel paciente) {
-        PacienteModel novoPaciente = pacienteRepository.save(paciente);
-        return ResponseEntity.ok(novoPaciente);
+    @GetMapping("/novo")
+    public String mostrarFormulario(Model model) {
+        model.addAttribute("paciente", new PacienteModel());
+        model.addAttribute("donos", donoRepository.findAll());
+        return "pacientes/formulario";
     }
 
-    @PutMapping("/{id}")
-public ResponseEntity<PacienteModel> editar(@PathVariable Long id, @RequestBody PacienteModel pacienteAtualizado) {
-    return pacienteRepository.findById(id)
-            .map(paciente -> {
-                paciente.setNome(pacienteAtualizado.getNome());
-                paciente.setPeso(pacienteAtualizado.getPeso());
-                paciente.setTipoAnimal(pacienteAtualizado.getTipoAnimal());
-                paciente.setSexo(pacienteAtualizado.getSexo());
-                paciente.setRaca(pacienteAtualizado.getRaca());
-                PacienteModel pacienteSalvo = pacienteRepository.save(paciente);
-                return ResponseEntity.ok(pacienteSalvo);
-            }).orElse(ResponseEntity.notFound().build());
-}
+    @PostMapping("/salvar")
+    public String salvar(@ModelAttribute PacienteModel paciente) {
+        pacienteRepository.save(paciente);
+        return "redirect:/pacientes";
+    }
 
+    @GetMapping("/editar/{id}")
+    public String editar(@PathVariable Long id, Model model) {
+        model.addAttribute("paciente", pacienteRepository.findById(id).orElseThrow());
+        model.addAttribute("donos", donoRepository.findAll());
+        return "pacientes/formulario";
+    }
 
-
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deletar(@PathVariable Long id) {
-        if (pacienteRepository.existsById(id)) {
-            pacienteRepository.deleteById(id);
-            return ResponseEntity.noContent().build();
-        }
-        return ResponseEntity.notFound().build();
+    @GetMapping("/deletar/{id}")
+    public String deletar(@PathVariable Long id) {
+        pacienteRepository.deleteById(id);
+        return "redirect:/pacientes";
     }
 }

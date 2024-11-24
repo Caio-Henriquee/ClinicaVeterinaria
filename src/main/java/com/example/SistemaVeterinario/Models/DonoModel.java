@@ -25,6 +25,8 @@ public class DonoModel {
     @Column(nullable = false)
     private String telefone;
 
-    //@OneToMany(mappedBy = "dono", cascade = CascadeType.ALL)
-    //private List<PacienteModel> pacientes;
+    @OneToMany(mappedBy = "dono", cascade = CascadeType.ALL)
+    private List<PacienteModel> pacientes;
+
+    
 }

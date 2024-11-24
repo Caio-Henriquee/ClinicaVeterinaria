@@ -2,50 +2,49 @@ package com.example.SistemaVeterinario.Controllers;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
 import com.example.SistemaVeterinario.Models.DonoModel;
 import com.example.SistemaVeterinario.Repositorys.DonoRepository;
 
+
 import java.util.List;
 
-@RestController
+@Controller
 @RequestMapping("/donos")
 public class DonoController {
-
     @Autowired
     private DonoRepository donoRepository;
 
     @GetMapping
-    public List<DonoModel> listarTodos() {
-        return donoRepository.findAll();
+    public String listarDonos(Model model) {
+        model.addAttribute("donos", donoRepository.findAll());
+        return "donos/lista";
     }
 
-    @PostMapping
-    public ResponseEntity<DonoModel> cadastrar(@RequestBody DonoModel dono) {
-        DonoModel novoDono = donoRepository.save(dono);
-        return ResponseEntity.ok(novoDono);
+    @GetMapping("/novo")
+    public String mostrarFormulario(Model model) {
+        model.addAttribute("dono", new DonoModel());
+        return "donos/formulario";
     }
 
-    @PutMapping("/{id}")
-    public ResponseEntity<DonoModel> editar(@PathVariable Long id, @RequestBody DonoModel donoAtualizado) {
-        return donoRepository.findById(id)
-                .map(dono -> {
-                    dono.setNome(donoAtualizado.getNome());
-                    dono.setCpf(donoAtualizado.getCpf());
-                    dono.setTelefone(donoAtualizado.getTelefone());
-                    DonoModel donoSalvo = donoRepository.save(dono);
-                    return ResponseEntity.ok(donoSalvo);
-                }).orElse(ResponseEntity.notFound().build());
+    @PostMapping("/salvar")
+    public String salvar(@ModelAttribute DonoModel dono) {
+        donoRepository.save(dono);
+        return "redirect:/donos";
     }
-    
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deletar(@PathVariable Long id) {
-        if (donoRepository.existsById(id)) {
-            donoRepository.deleteById(id);
-            return ResponseEntity.noContent().build();
-        }
-        return ResponseEntity.notFound().build();
+    @GetMapping("/editar/{id}")
+    public String editar(@PathVariable Long id, Model model) {
+        model.addAttribute("dono", donoRepository.findById(id).orElseThrow());
+        return "donos/formulario";
+    }
+
+    @GetMapping("/deletar/{id}")
+    public String deletar(@PathVariable Long id) {
+        donoRepository.deleteById(id);
+        return "redirect:/donos";
     }
 }
